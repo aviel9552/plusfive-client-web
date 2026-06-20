@@ -4,17 +4,6 @@
         "source": "/(.*)",
         "destination": "/index.html"
       }
-    ],
-    "headers": [
-      {
-        "source": "/(.*)",
-        "headers": [
-          {
-            "key": "Content-Security-Policy",
-            "value": "frame-src 'self' https://hf.tranzila.com https://secure5.tranzila.com https://directng.tranzila.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; frame-ancestors 'self' https://hf.tranzila.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://hf.tranzila.com https://secure5.tranzila.com https://directng.tranzila.com; connect-src 'self' https://api.stripe.com https://hf.tranzila.com https://api.tranzila.com https://secure5.tranzila.com https://directng.tranzila.com"
-          }
-        ]
-      }
     ]
   }
   
