@@ -1,0 +1,449 @@
+import React, { useRef, useState, useCallback, useEffect } from 'react';
+import CommonPagination from './CommonPagination';
+import CommonLoader from './CommonLoader';
+import { createPortal } from 'react-dom';
+import { HiDotsHorizontal } from 'react-icons/hi';
+import { useLanguage } from '../../context/LanguageContext';
+import { getCommonTableTranslations } from '../../utils/translations';
+
+const PAGE_SIZES = [7, 10, 20, 30, 50];
+
+// Search component
+const SearchInput = React.memo(({ value, onChange, placeholder }) => (
+  <div className="relative flex-1">
+    <input
+      type="text"
+      placeholder={placeholder || 'Search...'}
+      value={value || ''}
+      onChange={e => onChange(e.target.value)}
+      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#232323] border-2 border-gray-200 dark:border-customBorderColor rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-white focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all duration-200"
+      aria-label="Search table"
+    />
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+    </span>
+  </div>
+));
+
+// Filter component
+const FilterDropdown = React.memo(({ value, options, onChange, filterLabel }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const filterRef = useRef(null);
+
+  React.useEffect(() => {
+    const handleClick = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClick);
+    }
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isOpen]);
+
+  return (
+    <div className="relative min-w-[180px]" ref={filterRef}>
+      <button
+        type="button"
+        className="w-full flex items-center justify-between bg-gray-50 dark:bg-[#232323] text-gray-700 dark:text-white px-4 py-2.5 rounded-xl text-sm border-2 border-gray-200 dark:border-customBorderColor hover:border-pink-500 dark:hover:border-pink-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all duration-200"
+        onClick={() => setIsOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span>{value || filterLabel || 'Filter'}</span>
+        <svg className={`ml-2 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {isOpen && (
+        <div
+          className="absolute right-0 mt-2 w-full bg-white dark:bg-[#232323] border-2 border-gray-200 dark:border-customBorderColor rounded-xl shadow-lg z-20 animate-fadeIn overflow-hidden"
+          role="listbox"
+        >
+          {options.map(option => (
+            <button
+              key={option}
+              className={`block w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors duration-150
+                ${value === option ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400' : 'text-gray-700 dark:text-white'}`}
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+              role="option"
+              aria-selected={value === option}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+function DropdownPortal({ anchorRef, open, children }) {
+  const [style, setStyle] = React.useState({});
+  const dropdownRef = React.useRef();
+
+  React.useEffect(() => {
+    if (open && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const dropdownWidth = 180;
+      let left = rect.left;
+      if (left + dropdownWidth > window.innerWidth - 8) {
+        left = window.innerWidth - dropdownWidth - 8;
+      }
+      if (left < 8) left = 8;
+
+      // Height calculation
+      let dropdownHeight = 0;
+      if (dropdownRef.current) {
+        dropdownHeight = dropdownRef.current.offsetHeight;
+      } else {
+        dropdownHeight = 60;
+      }
+
+      // Direction logic
+      let top = rect.bottom;
+      if (window.innerHeight - rect.bottom < dropdownHeight + 8) {
+        // Not enough space below, open upward
+        top = rect.top - dropdownHeight;
+        if (top < 8) top = 8;
+      }
+      setStyle({
+        position: 'fixed',
+        left,
+        top,
+        zIndex: 2147483647, // max z-index
+        width: dropdownWidth,
+        minWidth: 140,
+        maxWidth: '95vw',
+        maxHeight: '60vh',
+        overflowY: 'auto',
+      });
+    }
+  }, [open, anchorRef, children]);
+
+  // Close on scroll/resize
+  React.useEffect(() => {
+    if (!open) return;
+    const close = () => setStyle(s => ({ ...s }));
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
+
+  if (!open) return null;
+  return createPortal(
+    <div ref={dropdownRef} style={style} className="bg-white dark:bg-gray-800 border rounded-lg shadow-lg py-1 z-[2147483647]">
+      {children}
+    </div>,
+    document.body
+  );
+}
+
+const CommonTable = ({
+  columns,
+  data,
+  total,
+  searchValue = '',
+  onSearchChange,
+  filterValue = '',
+  filterOptions,
+  onFilterChange,
+  loading = false,
+  renderActions,
+  onSort,
+  loadingComponent,
+  noDataComponent,
+  className = '',
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  pageSize = PAGE_SIZES[0],
+  showPagination = true,
+  paginationProps = {},
+  showCount = true,
+  // Selection props
+  selectedItems = [],
+  onSelectItem,
+  onSelectAll,
+  onDownloadSelected,
+  onDeleteSelected,
+  getRowId = (row, idx) => row?.id || idx
+}) => {
+  const { language } = useLanguage();
+  const t = getCommonTableTranslations(language);
+  const [sortConfig, setSortConfig] = useState(null);
+  const actionBtnRefs = useRef([]);
+  const [openAction, setOpenAction] = useState(null);
+  const [openUpward, setOpenUpward] = useState(false);
+  
+  // Check if selection is enabled
+  const enableSelection = onSelectItem !== undefined;
+  
+  // Handle row selection
+  const handleRowSelect = useCallback((row, idx) => {
+    if (!onSelectItem) return;
+    const rowId = getRowId(row, idx);
+    onSelectItem(rowId);
+  }, [onSelectItem, getRowId]);
+  
+  // Check if row is selected
+  const isRowSelected = useCallback((row, idx) => {
+    if (!enableSelection) return false;
+    const rowId = getRowId(row, idx);
+    return selectedItems.includes(rowId);
+  }, [enableSelection, selectedItems, getRowId]);
+  
+  // Check if all items are selected - use total for comparison if provided
+  const totalItems = total !== undefined ? total : data.length;
+  const isAllSelected = enableSelection && totalItems > 0 && selectedItems.length === totalItems;
+
+  const handleSort = useCallback((key) => {
+    if (!onSort) return;
+
+    const direction = sortConfig?.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    setSortConfig({ key, direction });
+    onSort(key, direction);
+  }, [sortConfig, onSort]);
+
+  const handleActionClick = (idx) => {
+    if (openAction === idx) {
+      setOpenAction(null);
+      setOpenUpward(false);
+      return;
+    }
+    const btnRect = actionBtnRefs.current[idx]?.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - (btnRect?.bottom || 0);
+    setOpenUpward(spaceBelow < 180);
+    setOpenAction(idx);
+  };
+
+  return (
+    <div className={` transition-colors duration-200 font-ttcommons ${className}`}>
+      {/* Bulk Actions Bar - Show only when items are selected */}
+      {enableSelection && selectedItems.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          {onSelectAll && (
+            <button
+              onClick={onSelectAll}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border-2 border-gray-200 dark:border-customBorderColor bg-gray-50 dark:bg-[#232323] text-gray-700 dark:text-white hover:border-pink-500 dark:hover:border-pink-500 transition-all duration-200"
+            >
+              <span
+                className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                  isAllSelected
+                    ? "border-[rgba(255,37,124,1)]"
+                    : "border-gray-300 dark:border-gray-500"
+                }`}
+              >
+                {isAllSelected && (
+                  <span className="w-2 h-2 rounded-full bg-[#ff257c]" />
+                )}
+              </span>
+              <span className="whitespace-nowrap">
+                {language === 'he' ? `בחר הכל (${selectedItems.length}/${totalItems})` : `Select All (${selectedItems.length}/${totalItems})`}
+              </span>
+            </button>
+          )}
+          
+          {onDownloadSelected && (
+            <button
+              onClick={onDownloadSelected}
+              disabled={selectedItems.length === 0}
+              className={`p-2.5 rounded-xl border-2 transition-all duration-200 ${
+                selectedItems.length === 0
+                  ? "text-gray-300 dark:text-gray-600 cursor-not-allowed bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-customBorderColor"
+                  : "text-gray-900 dark:text-white hover:text-[#ff257c] hover:border-[#ff257c] border-gray-200 dark:border-customBorderColor bg-white dark:bg-[#232323]"
+              }`}
+              title={language === 'he' ? "הורדת פריטים נבחרים" : "Download selected items"}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+            </button>
+          )}
+          
+          {onDeleteSelected && (
+            <button
+              onClick={onDeleteSelected}
+              disabled={selectedItems.length === 0}
+              className={`p-2.5 rounded-xl border-2 transition-all duration-200 ${
+                selectedItems.length === 0
+                  ? "text-gray-300 dark:text-gray-600 cursor-not-allowed bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-customBorderColor"
+                  : "text-gray-600 dark:text-white hover:text-red-500 hover:border-red-500 border-gray-200 dark:border-customBorderColor bg-white dark:bg-[#232323]"
+              }`}
+              title={language === 'he' ? "מחיקת פריטים נבחרים" : "Delete selected items"}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* <div className={`flex flex-col sm:flex-row gap-4 ${onSearchChange || onFilterChange ? 'mb-6' : 'mb-0'}`}>
+        {onSearchChange && (
+          <SearchInput value={searchValue} onChange={onSearchChange} placeholder={t.search} />
+        )}
+        {onFilterChange && filterOptions && (
+          <FilterDropdown value={filterValue} options={filterOptions} onChange={onFilterChange} filterLabel={t.filter} />
+        )}
+      </div> */}
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm table-auto" role="grid">
+          <thead>
+            <tr className="border-b border-gray-200 dark:border-customBorderColor">
+              {enableSelection && (
+                <th className="py-3 px-4 w-12">
+                  {onSelectAll && (
+                    <button
+                      onClick={onSelectAll}
+                      className="flex items-center justify-center"
+                      aria-label="Select all rows"
+                    >
+                      <span
+                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                          isAllSelected
+                            ? "border-[rgba(255,37,124,1)]"
+                            : "border-gray-300 dark:border-gray-500"
+                        }`}
+                      >
+                        {isAllSelected && (
+                          <span className="w-2 h-2 rounded-full bg-[#ff257c]" />
+                        )}
+                      </span>
+                    </button>
+                  )}
+                </th>
+              )}
+              {columns.map(col => (
+                <th
+                  key={col.key}
+                  className={`py-3 px-4 text-left font-semibold text-gray-700 dark:text-gray-300 ${col.className || ''} ${col.sortable ? 'cursor-pointer select-none' : ''}`}
+                  onClick={() => col.sortable && handleSort(col.key)}
+                  aria-sort={sortConfig?.key === col.key ? sortConfig.direction : undefined}
+                >
+                  <div className="flex items-center gap-1 text-16">
+                    {col.label}
+                    {col.sortable && (
+                      <svg
+                        className={`w-4 h-4 transition-transform ${sortConfig?.key === col.key
+                            ? sortConfig.direction === 'asc'
+                              ? 'transform rotate-180'
+                              : ''
+                            : ''
+                          }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 15l4 4 4-4M8 9l4-4 4 4" />
+                      </svg>
+                    )}
+                  </div>
+                </th>
+              ))}
+              {renderActions && <th className="py-3 px-4 text-left font-semibold text-gray-700 dark:text-gray-300">{t.action}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length + (enableSelection ? 1 : 0) + (renderActions ? 1 : 0)} className="text-center py-12">
+                  <div className="flex items-center justify-center min-h-[120px]">
+                    {loadingComponent ?? <CommonLoader />}
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length + (enableSelection ? 1 : 0) + (renderActions ? 1 : 0)} className="text-center py-8 dark:text-white">
+                  {noDataComponent || t.noDataFound}
+                </td>
+              </tr>
+            ) : (
+              data.map((row, idx) => (
+                <tr
+                  key={idx}
+                  className={`border-b border-gray-200 dark:border-commonBorder hover:bg-gray-100 dark:hover:bg-[#181818] transition-colors ${
+                    isRowSelected(row, idx) 
+                      ? 'bg-pink-50 dark:bg-pink-500/5' 
+                      : idx % 2 === 0 
+                        ? 'bg-white dark:bg-[#000000]' 
+                        : 'bg-[#fcfcfc] dark:bg-[#050505]'
+                  }`}
+                  role="row"
+                >
+                  {enableSelection && (
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowSelect(row, idx);
+                        }}
+                        className="flex items-center justify-center cursor-pointer"
+                        aria-label={`Select row ${idx + 1}`}
+                      >
+                        <span
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            isRowSelected(row, idx)
+                              ? "border-[rgba(255,37,124,1)]"
+                              : "border-gray-300 dark:border-gray-500"
+                          }`}
+                        >
+                          {isRowSelected(row, idx) && (
+                            <span className="w-2 h-2 rounded-full bg-[#ff257c]" />
+                          )}
+                        </span>
+                      </button>
+                    </td>
+                  )}
+                  {columns.map(col => (
+                    <td
+                      key={col.key}
+                      className={`py-3 px-4 text-14 text-black dark:text-white ${col.className || ''}`}
+                      role="gridcell"
+                    >
+                      {col.render ? col.render(row, idx) : row[col.key]}
+                    </td>
+                  ))}
+                  {renderActions && (
+                    <td className="py-3 px-4" role="gridcell">
+                      {renderActions(row, idx)}
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showCount && (
+        <span >
+          {showPagination && onPageChange && (
+            <div className="mt-6">
+              <CommonPagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                total={total}
+                onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
+                {...paginationProps}
+              />
+            </div>
+          )}
+        </span>
+      )}
+
+    </div>
+  );
+};
+
+export default CommonTable;
