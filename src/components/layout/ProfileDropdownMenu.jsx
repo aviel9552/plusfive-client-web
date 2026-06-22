@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FiLogOut, FiMoon, FiSun } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
+import { FiCalendar, FiHome, FiLogOut, FiMoon, FiPlus, FiSun, FiUser } from 'react-icons/fi'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import CommonConfirmModel from '../commonComponent/CommonConfirmModel'
 import { useAuth } from '../../context/AuthContext'
@@ -33,7 +33,7 @@ function PillToggle({ active, children, onClick, ariaLabel }) {
   )
 }
 
-export default function ProfileDropdownMenu({ onClose }) {
+export default function ProfileDropdownMenu({ onClose, variant = 'default' }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { isDarkMode, toggleTheme } = useTheme()
@@ -43,6 +43,8 @@ export default function ProfileDropdownMenu({ onClose }) {
   const panelP = getSettingsPanelTranslations(language)
   const isRtl = language === 'he'
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const showClientNavLinks = variant === 'marketplace'
+  const useCompactNavLinks = variant === 'marketplace'
 
   const displayName = user?.fullName || user?.name || user?.firstName || 'Client'
   const email = user?.email || ''
@@ -55,9 +57,24 @@ export default function ProfileDropdownMenu({ onClose }) {
     navigate('/login', { replace: true })
   }
 
+  const clientNavItems = [
+    { to: '/client/home', icon: FiHome, label: t.navHome },
+    { to: '/client/book/business', icon: FiPlus, label: t.navBook },
+    { to: '/client/appointments', icon: FiCalendar, label: t.navAppointments },
+    { to: '/client/profile', icon: FiUser, label: t.navProfile },
+  ]
+
+  const handleNavClick = () => {
+    onClose?.()
+  }
+
   return (
     <>
-    <div dir={isRtl ? 'rtl' : 'ltr'} className={PROFILE_MENU_CARD_CLASS} role="menu">
+    <div
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className={`${PROFILE_MENU_CARD_CLASS} w-full`}
+      role="menu"
+    >
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-black text-base font-bold text-white dark:border-customBorderColor dark:bg-black">
           {initial}
@@ -73,6 +90,35 @@ export default function ProfileDropdownMenu({ onClose }) {
       </div>
 
       <hr className="mb-4 border-0 border-t border-gray-200 dark:border-commonBorder" />
+
+      {showClientNavLinks ? (
+        <>
+          <nav className={useCompactNavLinks ? 'mb-4 space-y-0' : 'mb-4 space-y-1'}>
+            {clientNavItems.map(({ to, icon: Icon, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={handleNavClick}
+                className={
+                  useCompactNavLinks
+                    ? 'block rounded-lg px-2 py-2 text-[15px] font-medium text-gray-800 transition-colors hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-[#1a1a1a]'
+                    : 'flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-[15px] font-medium text-gray-800 transition-colors hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-[#1a1a1a]'
+                }
+              >
+                {useCompactNavLinks ? (
+                  label
+                ) : (
+                  <>
+                    <Icon className="h-[18px] w-[18px] shrink-0 text-gray-500 dark:text-gray-400" />
+                    <span>{label}</span>
+                  </>
+                )}
+              </Link>
+            ))}
+          </nav>
+          <hr className="mb-4 border-0 border-t border-gray-200 dark:border-commonBorder" />
+        </>
+      ) : null}
 
       <div className="mb-4">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 dark:text-gray-500">

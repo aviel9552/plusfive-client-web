@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { FloatingInput } from '../../components'
 import { useLanguage } from '../../context/LanguageContext'
@@ -17,7 +17,9 @@ function AuthShell({ children }) {
           style={{ colorScheme: 'dark' }}
         >
           <div className="absolute left-1/2 -translate-x-1/2" style={{ top: '5.5rem' }}>
-            <img src={darkLogo} alt="Logo" className="h-8 w-auto" />
+            <Link to="/">
+              <img src={darkLogo} alt="Logo" className="h-8 w-auto" />
+            </Link>
           </div>
           <div
             className="mx-auto flex w-full max-w-md flex-1 items-center justify-center"
@@ -46,6 +48,8 @@ export default function LoginPage() {
   const t = getAuthTranslations(language)
   const v = getValidationTranslations(language)
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = location.state?.returnTo || null
 
   const [email, setEmail] = useState('')
   const [error, setError] = useState({})
@@ -119,6 +123,7 @@ export default function LoginPage() {
       navigate('/login/verify', {
         state: {
           email: email.trim().toLowerCase(),
+          returnTo,
         },
       })
 

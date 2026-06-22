@@ -28,6 +28,7 @@ export default function Sidebar({
             to={link.to}
             icon={link.icon}
             label={link.label}
+            specialPaths={link.specialPaths}
             isCollapsed={isCollapsed}
             isRTL={isRTL}
           />

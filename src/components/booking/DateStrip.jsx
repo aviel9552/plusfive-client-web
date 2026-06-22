@@ -1,24 +1,22 @@
-import { useEffect, useMemo, useRef } from 'react'
-import {
-  isCalendarDateBlockedByMinAdvance,
-  isDateWithinMaxAdvanceBooking,
-} from '../../utils/clientPermissionsBookingWindow'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { FiCalendar } from 'react-icons/fi'
 import {
   dateAtNoonInTimeZone,
   getSchedulingNowInstant,
   resolveSchedulingWallDateKey,
-  DEFAULT_SCHEDULING_TIMEZONE,
 } from '../../utils/datetimeUtc'
+import {
+  isCalendarDateBlockedByMinAdvance,
+  isDateWithinMaxAdvanceBooking,
+} from '../../utils/clientPermissionsBookingWindow'
+import { resolveBookingTimezone } from '../../utils/booking/bookingDateHelpers'
+import BookingMonthCalendarPopover from './BookingMonthCalendarPopover'
 
 function addDays(date, days) {
   const d = new Date(date)
   d.setDate(d.getDate() + days)
   d.setHours(12, 0, 0, 0)
   return d
-}
-
-function resolveTimezone(value) {
-  return typeof value === 'string' && value.trim() ? value.trim() : DEFAULT_SCHEDULING_TIMEZONE
 }
 
 function resolveVisibleDays(clientPermissions) {
@@ -35,9 +33,11 @@ export default function DateStrip({
   locale,
   t,
 }) {
-  const timeZone = resolveTimezone(schedulingTimezone)
+  const timeZone = resolveBookingTimezone(schedulingTimezone)
   const scrollRef = useRef(null)
   const selectedButtonRef = useRef(null)
+  const calendarButtonRef = useRef(null)
+  const [calendarOpen, setCalendarOpen] = useState(false)
 
   const dates = useMemo(() => {
     const today = new Date()
@@ -77,7 +77,40 @@ export default function DateStrip({
 
   return (
     <div className="min-w-0">
-      <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t.selectDate}</p>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.selectDate}</p>
+        <div className="relative shrink-0">
+          <button
+            ref={calendarButtonRef}
+            type="button"
+            onClick={() => setCalendarOpen((open) => !open)}
+            aria-expanded={calendarOpen}
+            aria-label={t.openCalendar}
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
+              calendarOpen
+                ? 'border-customPink bg-customPink/10 text-customPink'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-customPink/50 dark:border-commonBorder dark:bg-[#181818] dark:text-gray-200'
+            }`}
+          >
+            <FiCalendar className="h-5 w-5" />
+          </button>
+
+          <BookingMonthCalendarPopover
+            isOpen={calendarOpen}
+            onClose={() => setCalendarOpen(false)}
+            anchorRef={calendarButtonRef}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            clientPermissions={clientPermissions}
+            schedulingTimezone={schedulingTimezone}
+            locale={locale}
+            openCalendarLabel={t.openCalendar}
+            prevMonthLabel={t.prevMonth}
+            nextMonthLabel={t.nextMonth}
+          />
+        </div>
+      </div>
+
       <div
         ref={scrollRef}
         className="flex w-full min-w-0 flex-nowrap gap-2 overflow-x-auto scroll-smooth pb-2 pt-1 snap-x snap-mandatory touch-pan-x [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"

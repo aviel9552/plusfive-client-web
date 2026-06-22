@@ -1,4 +1,4 @@
-import { FiCalendar, FiHome, FiPlus, FiUser } from 'react-icons/fi'
+import { FiCalendar, FiCompass, FiHome, FiPlus, FiUser } from 'react-icons/fi'
 import { getLayoutTranslations } from '../../utils/translations'
 
 const customerNavLinks = (language = 'he') => {
@@ -9,6 +9,7 @@ const customerNavLinks = (language = 'he') => {
     { to: '/client/book/business', icon: FiPlus, label: t.navBook },
     { to: '/client/appointments', icon: FiCalendar, label: t.navAppointments },
     { to: '/client/profile', icon: FiUser, label: t.navProfile },
+    { to: '/browse', icon: FiCompass, label: t.navExplore, specialPaths: ['/browse', '/business/:slug'] },
   ]
 }
 

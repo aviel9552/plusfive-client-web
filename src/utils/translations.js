@@ -38,6 +38,10 @@ export const getCustomerBookingTranslations = (language) => {
   return getTranslationSection(language, 'customerBooking')
 }
 
+export const getMarketplaceTranslations = (language) => {
+  return getTranslationSection(language, 'marketplace')
+}
+
 export const getSettingsPanelTranslations = (language) => {
   return getTranslationSection(language, 'settingsPanel')
 }

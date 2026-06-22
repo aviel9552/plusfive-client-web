@@ -15,8 +15,6 @@ function App() {
           <CommonToastify />
           <RouteLoader loadTime={100}>
             <Routes>
-              <Route path="/*" element={<PublicRoutes />} />
-
               <Route
                 path="/client/*"
                 element={
@@ -27,6 +25,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              <Route path="/*" element={<PublicRoutes />} />
             </Routes>
           </RouteLoader>
         </AuthProvider>

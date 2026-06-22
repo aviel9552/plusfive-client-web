@@ -22,6 +22,7 @@ export default function VerifyOtpPage() {
   const { login } = useAuth()
 
   const email = location.state?.email || ''
+  const returnTo = location.state?.returnTo || '/client/home'
 
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(''))
   const [error, setError] = useState('')
@@ -93,7 +94,7 @@ export default function VerifyOtpPage() {
     if (payload.token && payload.user) {
       login(payload.token, payload.user, payload.businesses || [])
       toast.success(t.toastLoginSuccess)
-      navigate('/client/home', { replace: true })
+      navigate(returnTo, { replace: true })
     }
   }
 

@@ -22,9 +22,13 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, user } = useAuth()
   const location = useLocation()
   const tokenValid = isTokenValid()
+  const isGuestBookingPath = location.pathname.startsWith('/client/book')
 
   if (!tokenValid) {
-    return <Navigate to="/login" replace state={{ from: location }} />
+    if (isGuestBookingPath) {
+      return children
+    }
+    return <Navigate to="/login" replace state={{ from: location, returnTo: location.pathname }} />
   }
 
   if (!isAuthenticated) {
