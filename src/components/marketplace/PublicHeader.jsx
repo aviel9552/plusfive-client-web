@@ -124,7 +124,7 @@ export default function PublicHeader() {
                 </span>
                 <span className="hidden sm:inline">{t.myAccount}</span>
                 <FiChevronDown
-                  className={`text-base transition-transform ${showAccountMenu ? 'rotate-180' : ''}`}
+                  className={`hidden text-base transition-transform sm:block ${showAccountMenu ? 'rotate-180' : ''}`}
                 />
               </button>
 
@@ -153,7 +153,7 @@ export default function PublicHeader() {
             href={ownerAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden rounded-full border border-gray-900 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-gray-300 dark:text-white dark:hover:bg-gray-900 sm:inline-block"
+            className="rounded-full border border-gray-900 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-gray-300 dark:text-white dark:hover:bg-gray-900 max-sm:hidden sm:inline-block"
           >
             {t.listBusiness}
           </a>

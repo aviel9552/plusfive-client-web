@@ -23,23 +23,23 @@ export default function HeroSearchBar({ initialQuery = '', compact = false }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`flex w-full items-center gap-2 rounded-full border border-gray-200 bg-white shadow-lg shadow-gray-200/50 dark:border-gray-700 dark:bg-[#141414] dark:shadow-none ${
-        compact ? 'max-w-xl p-1.5' : 'max-w-3xl p-2 sm:p-2.5'
+      className={`flex w-full flex-col gap-2 rounded-2xl border border-gray-200/90 bg-white/95 p-2 shadow-xl shadow-gray-300/30 backdrop-blur-sm ring-1 ring-black/[0.03] dark:border-gray-700 dark:bg-[#141414]/95 dark:shadow-none dark:ring-white/[0.04] sm:flex-row sm:items-center sm:rounded-full sm:gap-2 ${
+        compact ? 'max-w-xl sm:p-1.5' : 'max-w-3xl sm:p-2.5'
       }`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 px-3 sm:px-4">
-        <FiSearch className="shrink-0 text-lg text-gray-400" />
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-2 sm:px-4">
+        <FiSearch className="shrink-0 text-lg text-customPink/70" />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t.searchPlaceholder}
-          className="w-full border-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white sm:text-base"
+          className="w-full min-w-0 border-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white sm:text-base"
         />
       </div>
       <button
         type="submit"
-        className="shrink-0 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 sm:px-6"
+        className="w-full shrink-0 rounded-xl bg-customPink px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-customPink/20 transition hover:bg-customPink/90 sm:w-auto sm:rounded-full sm:px-6"
       >
         {t.search}
       </button>

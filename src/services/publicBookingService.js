@@ -12,12 +12,13 @@ export async function fetchPublicBusiness(slug) {
   return resp?.data?.data || null
 }
 
-export async function searchPublicBusinesses({ q = '', page = 1, limit = 20 } = {}) {
+export async function searchPublicBusinesses({ q = '', page = 1, limit = 20, sort = 'recommended' } = {}) {
   const resp = await publicApiClient.get('/public/businesses', {
     params: {
       q: q.trim() || undefined,
       page,
       limit,
+      sort: sort || undefined,
     },
   })
   const data = resp?.data?.data || resp?.data || {}

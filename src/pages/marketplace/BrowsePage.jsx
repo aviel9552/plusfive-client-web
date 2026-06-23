@@ -16,11 +16,20 @@ export default function BrowsePage() {
   const t = getMarketplaceTranslations(language)
 
   const qParam = searchParams.get('q') || ''
+  const sortParam = searchParams.get('sort') || 'recommended'
   const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
 
+  const sortTitleMap = {
+    recommended: t.recommended,
+    trending: t.trending,
+    new: t.newOnPlusfive,
+  }
+  const pageTitle = sortTitleMap[sortParam] || t.browseTitle
+
   const { data, isPending, isError } = useQuery({
-    queryKey: ['public-businesses-browse', qParam, pageParam],
-    queryFn: () => searchPublicBusinesses({ q: qParam, page: pageParam, limit: PAGE_SIZE }),
+    queryKey: ['public-businesses-browse', qParam, sortParam, pageParam],
+    queryFn: () =>
+      searchPublicBusinesses({ q: qParam, page: pageParam, limit: PAGE_SIZE, sort: sortParam }),
     staleTime: 30 * 1000,
     placeholderData: (prev) => prev,
   })
@@ -36,10 +45,10 @@ export default function BrowsePage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {t.browseTitle}
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+          {pageTitle}
         </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">{t.browseSubtitle}</p>
       </div>
