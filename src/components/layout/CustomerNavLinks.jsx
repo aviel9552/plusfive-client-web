@@ -9,7 +9,7 @@ const customerNavLinks = (language = 'he') => {
     { to: '/client/book/business', icon: FiPlus, label: t.navBook },
     { to: '/client/appointments', icon: FiCalendar, label: t.navAppointments },
     { to: '/client/profile', icon: FiUser, label: t.navProfile },
-    { to: '/browse', icon: FiCompass, label: t.navExplore, specialPaths: ['/browse', '/business/:slug'] },
+    { to: '/', icon: FiCompass, label: t.navExplore, specialPaths: ['/', '/business/:slug'] },
   ]
 }
 

@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FiSearch } from 'react-icons/fi'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { FiSearch, FiX } from 'react-icons/fi'
+import CommonLoader from '../commonComponent/CommonLoader'
 import { useLanguage } from '../../context/LanguageContext'
 import { getMarketplaceTranslations } from '../../utils/translations'
 
-export default function HeroSearchBar({ initialQuery = '', compact = false }) {
+export default function HeroSearchBar({
+  initialQuery = '',
+  compact = false,
+  syncUrl = false,
+  loading = false,
+}) {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { language } = useLanguage()
   const t = getMarketplaceTranslations(language)
   const [query, setQuery] = useState(initialQuery)
@@ -14,11 +21,52 @@ export default function HeroSearchBar({ initialQuery = '', compact = false }) {
     setQuery(initialQuery)
   }, [initialQuery])
 
+  const applyBrowseQuery = useCallback(
+    (value) => {
+      const trimmed = value.trim()
+      const params = new URLSearchParams(searchParams)
+
+      if (trimmed) {
+        params.set('q', trimmed)
+      } else {
+        params.delete('q')
+      }
+
+      params.delete('page')
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  const handleChange = (e) => {
+    const next = e.target.value
+    setQuery(next)
+
+    if (syncUrl && !next.trim()) {
+      applyBrowseQuery('')
+    }
+  }
+
+  const handleClear = () => {
+    setQuery('')
+    if (syncUrl) {
+      applyBrowseQuery('')
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const q = query.trim()
+
+    if (syncUrl) {
+      applyBrowseQuery(q)
+      return
+    }
+
     navigate(q ? `/browse?q=${encodeURIComponent(q)}` : '/browse')
   }
+
+  const showClear = query.length > 0
 
   return (
     <form
@@ -27,21 +75,41 @@ export default function HeroSearchBar({ initialQuery = '', compact = false }) {
         compact ? 'max-w-xl sm:p-1.5' : 'max-w-3xl sm:p-2.5'
       }`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 px-2 sm:px-4">
-        <FiSearch className="shrink-0 text-lg text-customPink/70" />
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-2 sm:px-3">
+        <FiSearch className="shrink-0 text-lg text-customPink/70" aria-hidden />
         <input
-          type="search"
+          type="text"
+          role="searchbox"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleChange}
           placeholder={t.searchPlaceholder}
-          className="w-full min-w-0 border-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white sm:text-base"
+          aria-label={t.searchPlaceholder}
+          className="w-full min-w-0 border-0 bg-transparent py-1 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white sm:text-base"
         />
+        {showClear ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            aria-label={t.clearSearch}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <FiX className="h-4 w-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
       <button
         type="submit"
-        className="w-full shrink-0 rounded-xl bg-customPink px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-customPink/20 transition hover:bg-customPink/90 sm:w-auto sm:rounded-full sm:px-6"
+        disabled={loading}
+        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-customPink px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-customPink/20 transition hover:bg-customPink/90 disabled:cursor-wait disabled:opacity-80 sm:w-auto sm:rounded-full sm:px-6"
       >
-        {t.search}
+        {loading ? (
+          <>
+            <CommonLoader />
+            <span>{t.searching}</span>
+          </>
+        ) : (
+          t.search
+        )}
       </button>
     </form>
   )

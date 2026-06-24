@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { getCustomerHomeTranslations, getCustomerBookingTranslations } from '../../utils/translations'
-import { BRAND_COLOR } from '../../utils/constants'
+import { getCustomerHomeTranslations } from '../../utils/translations'
 import {
   getCustomerDashboard,
   getErrorMessage,
 } from '../../services/customerDashboardService'
 import DashboardStats from '../../sections/home/DashboardStats'
+import HomeWelcomeHero from '../../sections/home/HomeWelcomeHero'
+import HomeQuickActions from '../../sections/home/HomeQuickActions'
 import RecentActivitySection from '../../sections/home/RecentActivitySection'
 import UpcomingSection from '../../sections/appointments/UpcomingSection'
 
@@ -17,7 +17,6 @@ export default function HomePage() {
   const { user } = useAuth()
   const { language } = useLanguage()
   const t = getCustomerHomeTranslations(language)
-  const bookT = getCustomerBookingTranslations(language)
   const isRtl = language === 'he'
 
   const [dashboard, setDashboard] = useState(null)
@@ -42,20 +41,6 @@ export default function HomePage() {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    },
-    [locale],
-  )
-
-  const formatDate = useCallback(
-    (value) => {
-      if (!value) return ''
-      return new Date(value).toLocaleString(locale, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       })
@@ -89,30 +74,24 @@ export default function HomePage() {
   const welcomeName = user?.fullName || user?.name || t.welcomeFallback
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100">
-          {t.title}
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-white">
-          {t.welcomeBack.replace('{{name}}', welcomeName)}
-          {user?.businessName ? ` · ${user.businessName}` : ''}
-        </p>
-        <p className="mt-1 text-sm text-gray-600 dark:text-white">
-          {t.subtitle}
-        </p>
-        <Link
-          to="/client/book/business"
-          className="mt-4 inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-          style={{ backgroundColor: BRAND_COLOR }}
-        >
-          {bookT.selectServices}
-        </Link>
-      </div>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="mx-auto max-w-5xl space-y-6">
+      <HomeWelcomeHero
+        name={welcomeName}
+        businessName={user?.businessName}
+        profileImage={user?.profileImage}
+        t={t}
+      />
 
-      <DashboardStats stats={dashboard?.stats} t={t} formatCurrency={formatCurrency} />
+      <DashboardStats
+        stats={dashboard?.stats}
+        t={t}
+        formatCurrency={formatCurrency}
+        loading={loading}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <HomeQuickActions t={t} isRtl={isRtl} />
+
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <UpcomingSection
           nextAppointment={dashboard?.nextAppointment}
           formatDateTime={formatDateTime}
@@ -121,9 +100,9 @@ export default function HomePage() {
         <RecentActivitySection
           items={dashboard?.recentActivity}
           t={t}
-          formatDate={formatDate}
           formatCurrency={formatCurrency}
           loading={loading}
+          language={language}
         />
       </div>
     </div>
