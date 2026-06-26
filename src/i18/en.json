@@ -314,6 +314,21 @@
     "bookingAuthLogin": "Log in",
     "bookingAuthContinueWithoutLogin": "Continue without login",
     "cancel": "Cancel",
-    "chooseServices": "Choose services"
+    "chooseServices": "Choose services",
+    "catMassage": "Massage",
+    "statsEyebrow": "By the numbers",
+    "statsTitle": "The trusted destination for selfcare",
+    "statsSubtitle": "One platform. Thousands of appointments. Trusted by the best local businesses.",
+    "stat1Label": "appointments booked",
+    "stat2Label": "partner businesses",
+    "stat3Label": "cities covered",
+    "stat4Label": "happy customers",
+    "testimonialsEyebrow": "Reviews",
+    "testimonialsTitle": "What our customers say",
+    "testimonialsSubtitle": "Trusted by people across the country",
+    "appointmentsBookedToday": "appointments booked today",
+    "getTheApp": "Get the app",
+    "searchLocationHint": "Near me",
+    "reviews": "reviews"
   }
 }

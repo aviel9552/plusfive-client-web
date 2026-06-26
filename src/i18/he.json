@@ -314,6 +314,21 @@
     "bookingAuthLogin": "התחברות",
     "bookingAuthContinueWithoutLogin": "המשך ללא התחברות",
     "cancel": "ביטול",
-    "chooseServices": "בחר שירותים"
+    "chooseServices": "בחר שירותים",
+    "catMassage": "עיסוי",
+    "statsEyebrow": "במספרים",
+    "statsTitle": "היעד המוביל לטיפוח עצמי",
+    "statsSubtitle": "פלטפורמה אחת. אלפי תורים. עסקים מקומיים מהמשובחים.",
+    "stat1Label": "תורים שהוזמנו",
+    "stat2Label": "עסקים שותפים",
+    "stat3Label": "ערים",
+    "stat4Label": "לקוחות מרוצים",
+    "testimonialsEyebrow": "חוות דעת",
+    "testimonialsTitle": "מה הלקוחות שלנו אומרים",
+    "testimonialsSubtitle": "מוערכים על ידי אנשים ברחבי הארץ",
+    "appointmentsBookedToday": "תורים הוזמנו היום",
+    "getTheApp": "הורד את האפליקציה",
+    "searchLocationHint": "קרוב אליי",
+    "reviews": "ביקורות"
   }
 }

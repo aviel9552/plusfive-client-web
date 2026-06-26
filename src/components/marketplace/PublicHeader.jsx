@@ -46,9 +46,17 @@ export default function PublicHeader() {
   const menuRef = useRef(null)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [menuStyle, setMenuStyle] = useState(null)
+  const [scrolled, setScrolled] = useState(false)
 
   const displayName = user?.fullName || user?.name || user?.firstName || ''
   const initial = (displayName || 'C').charAt(0).toUpperCase()
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!showAccountMenu) {
@@ -93,7 +101,11 @@ export default function PublicHeader() {
   return (
     <header
       dir="ltr"
-      className="sticky top-0 z-40 overflow-visible border-b border-gray-200/80 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-[#0a0a0a]/95"
+      className={`sticky top-0 z-40 overflow-visible border-b transition-colors duration-300 ${
+        scrolled
+          ? 'border-gray-200/80 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-[#0a0a0a]/95'
+          : 'border-transparent bg-transparent'
+      }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link

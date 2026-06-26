@@ -16,7 +16,7 @@ export const ThemeProvider = ({ children }) => {
     if (savedTheme) {
       return savedTheme === 'dark';
     }
-    return false;
+    return true;
   });
 
   const toggleTheme = () => {
