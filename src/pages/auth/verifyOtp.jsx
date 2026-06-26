@@ -22,7 +22,7 @@ export default function VerifyOtpPage() {
   const { login } = useAuth()
 
   const email = location.state?.email || ''
-  const returnTo = location.state?.returnTo || '/client/home'
+  const returnTo = location.state?.returnTo || '/'
 
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(''))
   const [error, setError] = useState('')

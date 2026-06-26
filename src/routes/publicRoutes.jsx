@@ -12,7 +12,7 @@ function PublicRouteGuard({ children }) {
   const { isAuthenticated } = useAuth()
 
   if (isAuthenticated) {
-    return <Navigate to="/client/home" replace />
+    return <Navigate to="/" replace />
   }
 
   return children

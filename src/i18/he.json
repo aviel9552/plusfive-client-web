@@ -170,7 +170,13 @@
     "colEndTime": "שעת סיום",
     "colDuration": "משך",
     "colPrice": "מחיר",
-    "colStatus": "סטטוס"
+    "colStatus": "סטטוס",
+    "colInvoice": "חשבונית",
+    "viewInvoice": "צפה בחשבונית",
+    "loadingInvoice": "טוען...",
+    "invoiceTitle": "חשבונית",
+    "invoiceError": "לא ניתן לפתוח חשבונית",
+    "close": "סגור"
   },
   "commonTable": {
     "noDataFound": "לא נמצאו נתונים",

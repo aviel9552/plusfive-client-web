@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
+import { FileText, Loader2, X } from 'lucide-react'
 import { CommonTable, CommonNormalDropDown } from '../../components'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { getCustomerAppointmentsTranslations } from '../../utils/translations'
 import {
   getCustomerAppointments,
+  fetchAppointmentInvoiceBlobUrl,
   getErrorMessage,
 } from '../../services/customerAppointmentsService'
 import { getStatusLabel, getStatusStyle } from '../../utils/appointmentStatus'
@@ -39,6 +41,8 @@ export default function AppointmentsPage() {
   const [total, setTotal] = useState(0)
   const [tabCounts, setTabCounts] = useState({ upcoming: 0, past: 0 })
   const [loading, setLoading] = useState(true)
+  const [invoiceLoadingId, setInvoiceLoadingId] = useState(null)
+  const [invoiceUrl, setInvoiceUrl] = useState(null)
 
   const locale = language === 'he' ? 'he-IL' : 'en-US'
 
@@ -133,6 +137,39 @@ export default function AppointmentsPage() {
 
   const activeEmpty = activeTab === 'upcoming' ? t.noUpcoming : t.noPast
 
+  useEffect(
+    () => () => {
+      if (invoiceUrl) URL.revokeObjectURL(invoiceUrl)
+    },
+    [invoiceUrl],
+  )
+
+  const closeInvoice = useCallback(() => {
+    setInvoiceUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+  }, [])
+
+  const handleViewInvoice = useCallback(
+    async (row) => {
+      if (!row?.id || invoiceLoadingId) return
+      setInvoiceLoadingId(row.id)
+      try {
+        const url = await fetchAppointmentInvoiceBlobUrl(row.id, { language })
+        setInvoiceUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev)
+          return url
+        })
+      } catch (err) {
+        toast.error(getErrorMessage(err, t.invoiceError))
+      } finally {
+        setInvoiceLoadingId(null)
+      }
+    },
+    [invoiceLoadingId, language, t.invoiceError],
+  )
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId)
     setCurrentPage(1)
@@ -203,8 +240,31 @@ export default function AppointmentsPage() {
           )
         },
       },
+      {
+        key: 'invoice',
+        label: t.colInvoice,
+        render: (row) => {
+          if (!row.hasInvoice) return <span className="text-gray-400">—</span>
+          const isLoading = invoiceLoadingId === row.id
+          return (
+            <button
+              type="button"
+              onClick={() => handleViewInvoice(row)}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 disabled:opacity-60 dark:border-commonBorder dark:bg-[#232323] dark:text-gray-300 dark:hover:bg-[#2a2a2a] dark:hover:text-white"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
+              ) : (
+                <FileText className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+              )}
+              <span className="whitespace-nowrap">{t.viewInvoice}</span>
+            </button>
+          )
+        },
+      },
     ],
-    [t, formatDate, formatTime, getEndDate, formatCurrency],
+    [t, formatDate, formatTime, getEndDate, formatCurrency, invoiceLoadingId, handleViewInvoice],
   )
 
   return (
@@ -277,6 +337,37 @@ export default function AppointmentsPage() {
           showPagination={!loading && total > 0}
         />
       </div>
+
+      {invoiceUrl ? (
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 p-4 dark:bg-black/70"
+          onClick={closeInvoice}
+          role="presentation"
+        >
+          <div
+            dir={isRtl ? 'rtl' : 'ltr'}
+            className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-commonBorder dark:bg-[#1a1a1a]"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-commonBorder">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                {t.invoiceTitle}
+              </h2>
+              <button
+                type="button"
+                onClick={closeInvoice}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
+                aria-label={t.close}
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <iframe title={t.invoiceTitle} src={invoiceUrl} className="h-full w-full flex-1 border-0" />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

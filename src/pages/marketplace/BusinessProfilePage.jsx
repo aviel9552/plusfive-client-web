@@ -34,7 +34,7 @@ import { useLanguage } from '../../context/LanguageContext'
 
 import { getMarketplaceTranslations } from '../../utils/translations'
 
-import { primeBookingDraftFromPublic } from '../../utils/publicBookingIntent'
+import { primeBookingDraftFromPublic, getBusinessOwnerAppUrl } from '../../utils/publicBookingIntent'
 
 import { collectGalleryImages } from '../../utils/marketplace/businessProfileHelpers'
 
@@ -173,7 +173,9 @@ export default function BusinessProfilePage() {
 
   const handleContinueWithoutLogin = () => {
     setShowAuthPrompt(false)
-    navigate('/client/book/services')
+    if (slug) {
+      window.location.href = `${getBusinessOwnerAppUrl()}/${encodeURIComponent(slug)}`
+    }
   }
 
 
